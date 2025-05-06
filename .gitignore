@@ -9,6 +9,7 @@ lerna-debug.log*
 
 dataset
 *.local
+__pycache__/
 
 # Editor directories and files
 .vscode/*
