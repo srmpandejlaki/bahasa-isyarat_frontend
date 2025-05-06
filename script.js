@@ -1,6 +1,7 @@
 const video = document.getElementById('videoElement');
 const canvas = document.getElementById('canvas');
 const resultDisplay = document.getElementById('result');
+const accuracyDisplay = document.getElementById('accuracy');
 
 const startBtn = document.getElementById('startBtn');
 const stopBtn = document.getElementById('stopBtn');
@@ -45,11 +46,15 @@ async function detectSign() {
 
   const prediction = model.predict(imageTensor);
   const predictionData = await prediction.data();
+
   const predictedIndex = predictionData.indexOf(Math.max(...predictionData));
+  const confidence = predictionData[predictedIndex];
 
   const labels = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
   const predictedLetter = labels[predictedIndex];
+
   resultDisplay.textContent = predictedLetter;
+  accuracyDisplay.textContent = (confidence * 100).toFixed(2) + "%";
 
   if (isSoundEnabled) {
     const utter = new SpeechSynthesisUtterance(predictedLetter);
