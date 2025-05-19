@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>BISINDO Realtime</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background: #f7f7f7;
+      padding: 20px;
+    }
+    #video {
+      width: 320px;
+      height: 240px;
+      border: 2px solid #333;
+      border-radius: 8px;
+      margin-bottom: 10px;
+    }
+    #controls {
+      margin: 10px 0;
+    }
+    button {
+      margin: 5px;
+      padding: 8px 16px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+    }
+    #result {
+      margin-top: 15px;
+      font-size: 1.2em;
+    }
+  </style>
+</head>
+<body>
+  <h1>Deteksi Alfabet BISINDO Realtime</h1>
+  <video id="video" autoplay></video>
+
+  <div id="controls">
+    <button id="toggleSound">🔈 Suara: Aktif</button>
+    <button id="toggleResult">👁️ Tampilkan Hasil: Aktif</button>
+  </div>
+
+  <p id="result">Menunggu prediksi...</p>
+
+  <script>
+    const video = document.getElementById("video");
+    const resultText = document.getElementById("result");
+    const toggleSoundBtn = document.getElementById("toggleSound");
+    const toggleResultBtn = document.getElementById("toggleResult");
+
+    let soundEnabled = true;
+    let resultVisible = true;
+    let lastPrediction = "";
+
+    // Toggle suara
+    toggleSoundBtn.addEventListener("click", () => {
+      soundEnabled = !soundEnabled;
+      toggleSoundBtn.textContent = `🔈 Suara: ${soundEnabled ? "Aktif" : "Nonaktif"}`;
+    });
+
+    // Toggle tampilan hasil
+    toggleResultBtn.addEventListener("click", () => {
+      resultVisible = !resultVisible;
+      toggleResultBtn.textContent = `👁️ Tampilkan Hasil: ${resultVisible ? "Aktif" : "Nonaktif"}`;
+      resultText.style.display = resultVisible ? "block" : "none";
+    });
+
+    // Minta akses webcam
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then(stream => {
+        video.srcObject = stream;
+      })
+      .catch(error => {
+        console.error("Gagal mengakses kamera:", error);
+        resultText.textContent = "Kamera tidak tersedia.";
+      });
+
+    // Inisialisasi canvas sekali
+    const canvas = document.createElement("canvas");
+    canvas.width = 128;
+    canvas.height = 128;
+    const ctx = canvas.getContext("2d");
+
+    function speak(text) {
+      speechSynthesis.cancel();  // hentikan suara sebelumnya
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = "id-ID";
+      speechSynthesis.speak(utterance);
+    }
+
+    async function predictFrame() {
+      ctx.drawImage(video, 0, 0, 128, 128);
+      const blob = await new Promise(resolve => canvas.toBlob(resolve, "image/jpeg"));
+      const formData = new FormData();
+      formData.append("file", blob, "frame.jpg");
+
+      try {
+        const response = await fetch("/predict", {
+          method: "POST",
+          body: formData
+        });
+
+        if (!response.ok) throw new Error("Gagal respons server");
+
+        const data = await response.json();
+        const currentPrediction = data.prediction;
+        const confidence = data.confidence;
+
+        if (resultVisible) {
+          resultText.textContent = `Prediksi: ${currentPrediction} (Confidence: ${confidence.toFixed(2)})`;
+        }
+
+        if (soundEnabled && currentPrediction !== lastPrediction && confidence > 0.6) {
+          speak(currentPrediction);
+          lastPrediction = currentPrediction;
+        }
+
+      } catch (error) {
+        console.error("Prediction error:", error);
+        if (resultVisible) resultText.textContent = "Gagal memprediksi.";
+      }
+    }
+
+    // Jalankan prediksi tiap 1 detik
+    setInterval(predictFrame, 1000);
+  </script>
+</body>
+</html>
