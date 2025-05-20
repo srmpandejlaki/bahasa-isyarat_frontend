@@ -159,6 +159,6 @@ print("Classification Report:\n", classification_report(y_true, y_pred, target_n
 
 # --- 9. Simpan model & mapping kelas ---
 model.save('model/training_results/bisindo_model.h5')
-with open('class_indices.json', 'w') as f:
+with open('model/training_results/class_indices.json', 'w') as f:
     json.dump({str(i): name for i, name in enumerate(class_names)}, f)
 print("Model & mapping kelas disimpan.")
