@@ -113,7 +113,7 @@
           resultText.textContent = `Prediksi: ${currentPrediction} (Confidence: ${confidence.toFixed(2)})`;
         }
 
-        if (soundEnabled && currentPrediction !== lastPrediction && confidence > 0.6) {
+        if (soundEnabled && currentPrediction !== lastPrediction && confidence > 0.5) {
           speak(currentPrediction);
           lastPrediction = currentPrediction;
         }
@@ -125,7 +125,7 @@
     }
 
     // Jalankan prediksi tiap 1 detik
-    setInterval(predictFrame, 1000);
+    setInterval(predictFrame, 3000);
   </script>
 </body>
 </html>

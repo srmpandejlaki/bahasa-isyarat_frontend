@@ -119,7 +119,7 @@ history = model.fit(
 )
 
 # --- 6. Simpan info ---
-with open('train_test_split_info.json', 'w') as f:
+with open('model/training_results/train_test_split_info.json', 'w') as f:
     json.dump({
         'train_count': len(train_images),
         'test_count': len(test_images),
